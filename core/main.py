@@ -1,6 +1,7 @@
 from chunking.chunking import clean_text, overlapping_chunking
 from embedding.embedding import EmbeddingModel
 from vectorStore.vector_store import FAISSVectorStore
+from generation.generation import OllamaLLM
 
 if __name__ == "__main__":
 
@@ -33,11 +34,29 @@ if __name__ == "__main__":
     vector_store.add_embeddings(embeddings.astype("float32"), chunks)
 
     # Query
-    query = "How does RAG retrieve information?"
+    query = "How does Dog retrieve information?"
     query_embedding = embedder.embed_query(query)
 
-    results = vector_store.search(query_embedding, top_k=2)
+    retrieved_chunks = vector_store.search(query_embedding, top_k=2)
 
-    print("\nTop Retrieved Chunks:")
-    for r in results:
-        print("-", r)
+    # Build grounded prompt
+    context = "\n\n".join(retrieved_chunks)
+
+    prompt = f"""
+    You are an AI assistant. Answer ONLY using the provided context.
+    If the answer is not in the context, say you don't know.
+
+    Context:
+    {context}
+
+    Question:
+    {query}
+
+    Answer:
+    """
+
+    llm = OllamaLLM()
+    answer = llm.generate(prompt)
+
+    print("\nGenerated Answer:\n")
+    print(answer)
