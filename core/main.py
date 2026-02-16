@@ -1,32 +1,43 @@
-from chunking.chunking import clean_text, overlapping_chunking, fixed_size_chunking, paragraph_chunking
+from chunking.chunking import clean_text, overlapping_chunking
+from embedding.embedding import EmbeddingModel
+from vectorStore.vector_store import FAISSVectorStore
 
 if __name__ == "__main__":
+
     sample_text = """
-    Retrieval Augmented Generation (RAG) is a technique that enhances LLMs by providing external knowledge sources during generation.
+    Retrieval Augmented Generation (RAG) enhances large language models by providing external documents during generation.
 
     It involves embedding documents into vector space and retrieving relevant context based on similarity search.
 
     The retrieved context is injected into the prompt before generating the final answer.
     """
 
+    # Clean + chunk
     text = clean_text(sample_text)
-    print("\nOverlapping chunking:")
-    overlapping_chunks = overlapping_chunking(text, chunk_size=100, overlap=20)
+    chunks = overlapping_chunking(text, chunk_size=150, overlap=30)
 
-    for i, chunk in enumerate(overlapping_chunks):
-        print(f"\n--- Chunk {i+1} ---")
-        print(chunk)
+    print("Chunks created:", len(chunks))
 
-    print("\nFixed chunking:")
-    fixed_chunks = fixed_size_chunking(text, chunk_size=100)
+    # Initialize embedding model
+    embedder = EmbeddingModel()
 
-    for i, chunk in enumerate(fixed_chunks):
-        print(f"\n--- Chunk {i+1} ---")
-        print(chunk)
+    # Generate embeddings
+    embeddings = embedder.embed_documents(chunks)
 
-    print("\nParagraph chunking:")
-    paragraph_chunks = paragraph_chunking(text, max_chunk_size=150)
+    print("Embedding shape:", embeddings.shape)
 
-    for i, chunk in enumerate(paragraph_chunks):
-        print(f"\n--- Chunk {i+1} ---")
-        print(chunk)
+    # Initialize FAISS
+    vector_store = FAISSVectorStore(dimension=embeddings.shape[1])
+
+    # Add embeddings
+    vector_store.add_embeddings(embeddings.astype("float32"), chunks)
+
+    # Query
+    query = "How does RAG retrieve information?"
+    query_embedding = embedder.embed_query(query)
+
+    results = vector_store.search(query_embedding, top_k=2)
+
+    print("\nTop Retrieved Chunks:")
+    for r in results:
+        print("-", r)
