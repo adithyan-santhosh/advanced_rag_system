@@ -27,8 +27,11 @@ class FAISSVectorStore:
         distances, indices = self.index.search(query_embedding, top_k)
 
         results = []
-        for idx in indices[0]:
+        for i, idx in enumerate(indices[0]):
             if idx < len(self.texts):
-                results.append(self.texts[idx])
+                results.append({
+                    "text": self.texts[idx],
+                    "distance": float(distances[0][i])
+                })
 
         return results

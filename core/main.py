@@ -34,13 +34,22 @@ if __name__ == "__main__":
     vector_store.add_embeddings(embeddings.astype("float32"), chunks)
 
     # Query
-    query = "How does Dog retrieve information?"
+    query = "How does RAG retrieve information?"
     query_embedding = embedder.embed_query(query)
 
-    retrieved_chunks = vector_store.search(query_embedding, top_k=2)
+    retrieved_results = vector_store.search(query_embedding, top_k=2)
 
-    # Build grounded prompt
-    context = "\n\n".join(retrieved_chunks)
+    context_chunks = []
+    print("\nRetrieved Chunks with Distance:\n")
+
+    for item in retrieved_results:
+        print("Distance:", item["distance"])
+        print(item["text"])
+        print("-" * 40)
+        context_chunks.append(item["text"])
+
+    context = "\n\n".join(context_chunks)
+
 
     prompt = f"""
     You are an AI assistant. Answer ONLY using the provided context.
