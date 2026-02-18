@@ -43,7 +43,7 @@ if __name__ == "__main__":
     print("\nRetrieved Chunks with Distance:\n")
 
     for item in retrieved_results:
-        print("Distance:", item["distance"])
+        print("Score:", item["score"])
         print(item["text"])
         print("-" * 40)
         context_chunks.append(item["text"])

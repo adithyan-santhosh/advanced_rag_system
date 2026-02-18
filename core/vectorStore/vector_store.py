@@ -5,33 +5,32 @@ import numpy as np
 class FAISSVectorStore:
     def __init__(self, dimension: int):
         """
-        Initialize FAISS index.
-        Using L2 distance for now.
+        Cosine similarity using Inner Product + normalization
         """
         self.dimension = dimension
-        self.index = faiss.IndexFlatL2(dimension)
+        self.index = faiss.IndexFlatIP(dimension)
         self.texts = []
 
     def add_embeddings(self, embeddings, texts):
-        """
-        Add embeddings and corresponding texts to index.
-        """
+        # Normalize embeddings
+        faiss.normalize_L2(embeddings)
         self.index.add(embeddings)
         self.texts.extend(texts)
 
     def search(self, query_embedding, top_k=3):
-        """
-        Search nearest neighbors.
-        """
         query_embedding = np.array([query_embedding]).astype("float32")
-        distances, indices = self.index.search(query_embedding, top_k)
+
+        # Normalize query
+        faiss.normalize_L2(query_embedding)
+
+        scores, indices = self.index.search(query_embedding, top_k)
 
         results = []
         for i, idx in enumerate(indices[0]):
             if idx < len(self.texts):
                 results.append({
                     "text": self.texts[idx],
-                    "distance": float(distances[0][i])
+                    "score": float(scores[0][i])
                 })
 
         return results
