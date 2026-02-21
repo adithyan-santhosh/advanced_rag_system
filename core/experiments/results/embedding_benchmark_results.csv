@@ -1,19 +1,19 @@
 model,query,query_type,top_score,top1_correct,embedding_time_sec
-all-MiniLM-L6-v2,What happens if battery temperature exceeds 45°C?,relevant,0.7493,False,0.4918
-all-MiniLM-L6-v2,What is included in Tier Beta maintenance?,relevant,0.6178,False,0.4918
-all-MiniLM-L6-v2,What happens if remote operator latency exceeds 500ms?,relevant,0.5103,False,0.4918
-all-MiniLM-L6-v2,Where is Solaris-X prohibited from operating?,relevant,0.6248,False,0.4918
-all-MiniLM-L6-v2,What type of engine does Solaris-X use?,irrelevant,0.5308,False,0.4918
-all-MiniLM-L6-v2,What fuel does Solaris-X consume?,irrelevant,0.5824,False,0.4918
-all-MiniLM-L6-v2,Who is the CEO of Solaris-X?,irrelevant,0.438,False,0.4918
-all-MiniLM-L6-v2,What is the vehicle's horsepower?,irrelevant,0.3814,False,0.4918
-all-MiniLM-L6-v2,Does Solaris-X use diesel engine?,irrelevant,0.4818,False,0.4918
-BAAI/bge-small-en,query: What happens if battery temperature exceeds 45°C?,relevant,0.9285,False,0.8665
-BAAI/bge-small-en,query: What is included in Tier Beta maintenance?,relevant,0.8614,False,0.8665
-BAAI/bge-small-en,query: What happens if remote operator latency exceeds 500ms?,relevant,0.8996,False,0.8665
-BAAI/bge-small-en,query: Where is Solaris-X prohibited from operating?,relevant,0.872,False,0.8665
-BAAI/bge-small-en,query: What type of engine does Solaris-X use?,irrelevant,0.8803,False,0.8665
-BAAI/bge-small-en,query: What fuel does Solaris-X consume?,irrelevant,0.896,False,0.8665
-BAAI/bge-small-en,query: Who is the CEO of Solaris-X?,irrelevant,0.8508,False,0.8665
-BAAI/bge-small-en,query: What is the vehicle's horsepower?,irrelevant,0.8461,False,0.8665
-BAAI/bge-small-en,query: Does Solaris-X use diesel engine?,irrelevant,0.8919,False,0.8665
+all-MiniLM-L6-v2,What happens if battery temperature exceeds 45°C?,relevant,0.7315,True,0.1439
+all-MiniLM-L6-v2,What is included in Tier Beta maintenance?,relevant,0.672,True,0.1439
+all-MiniLM-L6-v2,What happens if remote operator latency exceeds 500ms?,relevant,0.4583,False,0.1439
+all-MiniLM-L6-v2,Where is Solaris-X prohibited from operating?,relevant,0.6089,False,0.1439
+all-MiniLM-L6-v2,What type of engine does Solaris-X use?,irrelevant,0.5109,False,0.1439
+all-MiniLM-L6-v2,What fuel does Solaris-X consume?,irrelevant,0.5557,False,0.1439
+all-MiniLM-L6-v2,Who is the CEO of Solaris-X?,irrelevant,0.4701,False,0.1439
+all-MiniLM-L6-v2,What is the vehicle's horsepower?,irrelevant,0.2583,False,0.1439
+all-MiniLM-L6-v2,Does Solaris-X use diesel engine?,irrelevant,0.4569,False,0.1439
+BAAI/bge-small-en,query: What happens if battery temperature exceeds 45°C?,relevant,0.9168,True,0.422
+BAAI/bge-small-en,query: What is included in Tier Beta maintenance?,relevant,0.8494,True,0.422
+BAAI/bge-small-en,query: What happens if remote operator latency exceeds 500ms?,relevant,0.884,False,0.422
+BAAI/bge-small-en,query: Where is Solaris-X prohibited from operating?,relevant,0.8575,False,0.422
+BAAI/bge-small-en,query: What type of engine does Solaris-X use?,irrelevant,0.8696,False,0.422
+BAAI/bge-small-en,query: What fuel does Solaris-X consume?,irrelevant,0.8947,False,0.422
+BAAI/bge-small-en,query: Who is the CEO of Solaris-X?,irrelevant,0.8407,False,0.422
+BAAI/bge-small-en,query: What is the vehicle's horsepower?,irrelevant,0.8279,False,0.422
+BAAI/bge-small-en,query: Does Solaris-X use diesel engine?,irrelevant,0.8864,False,0.422
