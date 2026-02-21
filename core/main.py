@@ -47,7 +47,7 @@ if __name__ == "__main__":
     query = "What is the battery's standard operating temperature?"
     query_embedding = embedder.embed_query(query)
 
-    SIMILARITY_THRESHOLD = 0.2
+    SIMILARITY_THRESHOLD = 0.3
     retrieved_results = vector_store.search(query_embedding, top_k=3)
 
     valid_chunks = []
