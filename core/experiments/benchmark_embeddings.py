@@ -2,7 +2,7 @@ import os
 import csv
 import time
 
-from chunking.chunking import clean_text, overlapping_chunking
+from chunking.chunking import clean_text, overlapping_chunking, semantic_chunking
 from embedding.embedding import EmbeddingModel
 from vectorStore.vector_store import FAISSVectorStore
 
@@ -83,7 +83,9 @@ EMBEDDING_MODELS = [
 
 def run_benchmark():
     text = clean_text(DOCUMENT_TEXT)
-    chunks = overlapping_chunking(text, chunk_size=150, overlap=30)
+    chunks = semantic_chunking(text, max_chunk_size=200)
+     
+    print(f"No. of chunks: {len(chunks)}")
 
     os.makedirs("experiments/results", exist_ok=True)
     csv_file = "experiments/results/embedding_benchmark_results.csv"
@@ -96,6 +98,7 @@ def run_benchmark():
             "query_type",
             "top_score",
             "top1_correct",
+            "top3_correct",
             "embedding_time_sec"
         ])
 
@@ -118,6 +121,7 @@ def run_benchmark():
             irrelevant_scores = []
             top1_correct_count = 0
             relevant_count = 0
+            top3_correct_count = 0
 
             for item in TEST_QUERIES:
 
@@ -131,21 +135,30 @@ def run_benchmark():
                 query_embedding = embedder.embed_query(query)
                 results = vector_store.search(query_embedding, top_k=3)
 
-                top_chunk = results[0]["text"]
+                top_chunks = [r["text"] for r in results]
                 top_score = results[0]["score"]
 
                 print(f"\nQuery: {query}")
-                print(f"Top Score: {top_score:.4f}")
+                print(f"Top-1 Score: {top_score:.4f}")
 
                 top1_correct = False
+                top3_correct = False
 
                 if query_type == "relevant":
                     relevant_count += 1
                     relevant_scores.append(top_score)
 
-                    if expected_keyword and expected_keyword.lower() in top_chunk.lower():
+                    # Top-1 check
+                    if expected_keyword and expected_keyword.lower() in top_chunks[0].lower():
                         top1_correct = True
                         top1_correct_count += 1
+
+                    # Top-3 check
+                    if expected_keyword and any(
+                        expected_keyword.lower() in chunk.lower() for chunk in top_chunks
+                    ):
+                        top3_correct = True
+                        top3_correct_count += 1
                 else:
                     irrelevant_scores.append(top_score)
 
@@ -155,6 +168,7 @@ def run_benchmark():
                     query_type,
                     round(top_score, 4),
                     top1_correct,
+                    top3_correct,
                     round(embedding_time, 4)
                 ])
 
@@ -170,6 +184,7 @@ def run_benchmark():
                 hard_gap = min_relevant - max_irrelevant
 
                 top1_accuracy = top1_correct_count / relevant_count
+                top3_accuracy = top3_correct_count / relevant_count
 
                 print("\n--- Model Summary ---")
                 print(f"Avg Relevant Score: {avg_relevant:.4f}")
@@ -179,6 +194,7 @@ def run_benchmark():
                 print(f"Max Irrelevant Score: {max_irrelevant:.4f}")
                 print(f"Hard Separation Gap: {hard_gap:.4f}")
                 print(f"Top-1 Accuracy (Relevant Queries): {top1_accuracy:.2f}")
+                print(f"Top-3 Accuracy: {top3_accuracy:.2f}")
 
     print("\nBenchmark completed. Results saved to CSV.")
 

@@ -63,3 +63,36 @@ def paragraph_chunking(text: str, max_chunk_size: int = 500) -> List[str]:
                 chunks.append(para[i:i + max_chunk_size])
 
     return chunks
+
+def semantic_chunking(text: str, max_chunk_size: int = 300) -> List[str]:
+    """
+    Paragraph-aware chunking with sentence-level fallback.
+    Preserves semantic boundaries.
+    """
+
+    paragraphs = re.split(r'\n\s*\n', text)
+    chunks = []
+
+    for para in paragraphs:
+        para = para.strip()
+        if not para:
+            continue
+
+        if len(para) <= max_chunk_size:
+            chunks.append(para)
+        else:
+            # Sentence split fallback
+            sentences = re.split(r'(?<=[.!?])\s+', para)
+
+            current_chunk = ""
+            for sentence in sentences:
+                if len(current_chunk) + len(sentence) <= max_chunk_size:
+                    current_chunk += " " + sentence
+                else:
+                    chunks.append(current_chunk.strip())
+                    current_chunk = sentence
+
+            if current_chunk:
+                chunks.append(current_chunk.strip())
+
+    return chunks
