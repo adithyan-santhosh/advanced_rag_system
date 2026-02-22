@@ -5,6 +5,7 @@ import time
 from chunking.chunking import clean_text, overlapping_chunking, semantic_chunking
 from embedding.embedding import EmbeddingModel
 from vectorStore.vector_store import FAISSVectorStore
+from reranking.reranker import CrossEncoderReranker
 
 
 DOCUMENT_TEXT = """
@@ -115,6 +116,8 @@ def run_benchmark():
             embedding_time = time.time() - start_time
 
             vector_store = FAISSVectorStore(dimension=embeddings.shape[1])
+            reranker = CrossEncoderReranker()
+
             vector_store.add_embeddings(embeddings.astype("float32"), chunks)
 
             relevant_scores = []
@@ -135,8 +138,11 @@ def run_benchmark():
                 query_embedding = embedder.embed_query(query)
                 results = vector_store.search(query_embedding, top_k=3)
 
-                top_chunks = [r["text"] for r in results]
-                top_score = results[0]["score"]
+                # Apply reranking
+                reranked_results = reranker.rerank(query, results)
+
+                top_score = reranked_results[0]["score"]
+                top_chunks = [r["text"] for r in reranked_results]
 
                 print(f"\nQuery: {query}")
                 print(f"Top-1 Score: {top_score:.4f}")
