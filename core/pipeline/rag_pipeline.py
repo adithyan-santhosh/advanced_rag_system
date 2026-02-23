@@ -3,10 +3,20 @@ from vectorStore.vector_store import FAISSVectorStore
 from reranking.reranker import CrossEncoderReranker
 from chunking.chunking import semantic_chunking
 from generation.generation import OllamaLLM
+from analyzer.document_analyzer import DocumentAnalyzer
+from retrieval.hybrid_retriever import HybridRetriever
 
 
 class RAGPipeline:
+
     def __init__(self, document_text, chunk_size=200):
+
+        self.document_text = document_text
+
+        analyzer = DocumentAnalyzer(document_text)
+        self.use_hybrid = analyzer.is_code_heavy()
+
+        print(f"Adaptive Retrieval Mode: {'HYBRID' if self.use_hybrid else 'VECTOR'}")
 
         self.embedder = EmbeddingModel("all-MiniLM-L6-v2")
 
@@ -17,17 +27,32 @@ class RAGPipeline:
         self.vector_store = FAISSVectorStore(dimension=embeddings.shape[1])
         self.vector_store.add_embeddings(embeddings.astype("float32"), self.chunks)
 
+        if self.use_hybrid:
+            self.hybrid = HybridRetriever(self.chunks, self.vector_store)
+        else:
+            self.hybrid = None
+
         self.reranker = CrossEncoderReranker()
         self.llm = OllamaLLM()
 
+
     def retrieve(self, query, top_k=3):
 
-        query_embedding = self.embedder.embed_query(query)
-        vector_results = self.vector_store.search(query_embedding, top_k=top_k)
+        if self.use_hybrid:
+            retrieved = self.hybrid.search(
+                query,
+                self.embedder,
+                top_k=top_k,
+                alpha=0.6
+            )
+        else:
+            query_embedding = self.embedder.embed_query(query)
+            retrieved = self.vector_store.search(query_embedding, top_k=top_k)
 
-        reranked = self.reranker.rerank(query, vector_results)
+        reranked = self.reranker.rerank(query, retrieved)
 
         return reranked
+
 
     def generate_answer(self, query, top_k=3, confidence_threshold=0.0):
 

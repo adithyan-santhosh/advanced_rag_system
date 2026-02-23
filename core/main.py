@@ -1,21 +1,24 @@
 from pipeline.rag_pipeline import RAGPipeline
 
 DOCUMENT_TEXT = """
-1. Battery and Charging Specifications
-The Solaris-X fleet utilizes the Lithium-Sulfur "Gen-3" battery pack. Standard operating temperature for the battery is between 15°C and 35°C. If the core temperature exceeds 45°C, the vehicle must enter "Thermal Safe Mode" and limit speed to 20 km/h. Charging must only occur at Level 3 DC Fast Charging stations. A full charge from 10% to 80% takes exactly 22 minutes under optimal conditions.
+[SECTION 01: INVENTORY DATA] Beginning sync for hardware batch INV-2024-AX9347. The system identified the following hardware components registered under UID: 88472-99102-ZZ-001.
 
-2. Maintenance Intervals
-Preventive maintenance is categorized into two tiers:
+Status Code: ERR_SIG_404_NOT_FOUND
 
-Tier Alpha: Performed every 5,000 km. Includes sensor calibration and tire rotation.
+Asset Key: K-92837465-V2
 
-Tier Beta: Performed every 20,000 km. Includes coolant replacement and brake pad inspection.
+Voltage Ref: 12.05V / 0.05A
 
-3. Emergency Override Procedures
-In the event of a LIDAR failure, the Remote Operator (RO) must be notified via the "Signal-Blue" encrypted channel. The RO has a maximum latency requirement of 150ms to maintain control. If the connection exceeds 500ms, the vehicle is programmed to execute an "Immediate Curb Pull-over."
+Timestamp: 20260223115757
 
-4. Service Regional Boundaries
-Currently, the Solaris-X fleet is authorized to operate in the Northwest District (Zones A, B, and C) and the Central Business District (Zones D and E). Operation in the South Waterfront (Zone F) is strictly prohibited due to ongoing construction and interference with GPS signals.
+[SECTION 02: TRANSACTIONAL STRINGS] Validating transaction sequence TXN-8847-PL-Q9. Please ensure the following strings match the encrypted ledger output:
+AUTH_TOKEN_ACTIVE_VERIFIED
+
+SYS_PROCESS_MGMT_SIG_88
+
+REF_CODE: 000-111-222-333-ABCD-EFGH
+
+[SECTION 03: NUMERIC DENSITY CHECK] 99.45% of nodes are active. Parameters: 10.0.0.1, 192.168.1.254, 8080, 443. Latitude/Longitude: 9.9312° N, 76.2673° E. Floating point offset detected at 0.000000451.
 """
 
 if __name__ == "__main__":
