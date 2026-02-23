@@ -6,6 +6,7 @@ from chunking.chunking import clean_text, overlapping_chunking, semantic_chunkin
 from embedding.embedding import EmbeddingModel
 from vectorStore.vector_store import FAISSVectorStore
 from reranking.reranker import CrossEncoderReranker
+from retrieval.hybrid_retriever import HybridRetriever
 
 
 DOCUMENT_TEXT = """
@@ -77,8 +78,8 @@ TEST_QUERIES = [
 
 
 EMBEDDING_MODELS = [
-    "all-MiniLM-L6-v2",
-    "BAAI/bge-small-en"
+    "all-MiniLM-L6-v2"
+    # "BAAI/bge-small-en"
 ]
 
 
@@ -117,6 +118,7 @@ def run_benchmark():
 
             vector_store = FAISSVectorStore(dimension=embeddings.shape[1])
             reranker = CrossEncoderReranker()
+            hybrid = HybridRetriever(chunks, vector_store)
 
             vector_store.add_embeddings(embeddings.astype("float32"), chunks)
 
@@ -135,8 +137,14 @@ def run_benchmark():
                 if "bge" in model_name.lower():
                     query = "query: " + query
 
-                query_embedding = embedder.embed_query(query)
-                results = vector_store.search(query_embedding, top_k=3)
+                hybrid_results = hybrid.search(
+                    query,   # IMPORTANT: no "query:" prefix
+                    embedder,
+                    top_k=3,
+                    alpha=0.5
+                )
+
+                results = hybrid_results
 
                 # Apply reranking
                 reranked_results = reranker.rerank(query, results)
@@ -146,6 +154,11 @@ def run_benchmark():
 
                 print(f"\nQuery: {query}")
                 print(f"Top-1 Score: {top_score:.4f}")
+
+                print("\nTop-3 Hybrid Scores:")
+                for r in results:
+                    print(f"Vector: {r['vector_score']:.3f} | BM25: {r['bm25_score']:.3f} | Combined: {r['combined_score']:.3f}")
+
 
                 top1_correct = False
                 top3_correct = False
