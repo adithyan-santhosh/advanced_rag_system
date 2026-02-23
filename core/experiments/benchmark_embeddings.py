@@ -141,7 +141,7 @@ def run_benchmark():
                     query,   # IMPORTANT: no "query:" prefix
                     embedder,
                     top_k=3,
-                    alpha=0.5
+                    alpha=0.5   #alpha value tuning knob between lexical and semantic 
                 )
 
                 results = hybrid_results
