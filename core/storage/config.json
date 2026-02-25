@@ -1,0 +1,5 @@
+{
+  "embedding_model": "all-MiniLM-L6-v2",
+  "chunk_size": 200,
+  "retrieval_mode": "hybrid"
+}

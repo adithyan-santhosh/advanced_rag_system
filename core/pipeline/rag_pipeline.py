@@ -5,35 +5,91 @@ from chunking.chunking import semantic_chunking
 from generation.generation import OllamaLLM
 from analyzer.document_analyzer import DocumentAnalyzer
 from retrieval.hybrid_retriever import HybridRetriever
+import os
+import json
 
 
 class RAGPipeline:
 
-    def __init__(self, document_text, chunk_size=200):
+    def __init__(self, document_text, chunk_size=200, storage_path="storage"):
 
-        self.document_text = document_text
+        self.storage_path = storage_path
 
         analyzer = DocumentAnalyzer(document_text)
         self.use_hybrid = analyzer.is_code_heavy()
 
-        print(f"Adaptive Retrieval Mode: {'HYBRID' if self.use_hybrid else 'VECTOR'}")
+        print(
+            f"Adaptive Retrieval Mode: "
+            f"{'HYBRID' if self.use_hybrid else 'VECTOR'}"
+        )
 
         self.embedder = EmbeddingModel("all-MiniLM-L6-v2")
 
-        self.chunks = semantic_chunking(document_text, max_chunk_size=chunk_size)
+        self.reranker = CrossEncoderReranker()
 
-        embeddings = self.embedder.embed_documents(self.chunks)
+        self.llm = OllamaLLM()
 
-        self.vector_store = FAISSVectorStore(dimension=embeddings.shape[1])
-        self.vector_store.add_embeddings(embeddings.astype("float32"), self.chunks)
+        dimension = 384
+
+        self.vector_store = FAISSVectorStore(dimension)
+
+        index_exists = os.path.exists(
+            f"{storage_path}/faiss.index"
+        )
+
+        if index_exists:
+
+            print("Loading FAISS index from disk...")
+
+            self.vector_store.load(storage_path)
+
+            self.chunks = self.vector_store.texts
+
+        else:
+
+            print("Creating new FAISS index...")
+
+            self.chunks = semantic_chunking(
+                document_text,
+                max_chunk_size=chunk_size
+            )
+
+            embeddings = self.embedder.embed_documents(
+                self.chunks
+            )
+
+            self.vector_store.add_embeddings(
+                embeddings.astype("float32"),
+                self.chunks
+            )
+
+            self.vector_store.save(storage_path)
+
+            config = {
+                "embedding_model": "all-MiniLM-L6-v2",
+                "chunk_size": chunk_size,
+                "retrieval_mode":
+                "hybrid" if self.use_hybrid else "vector"
+            }
+
+            with open(
+                f"{storage_path}/config.json",
+                "w"
+            ) as f:
+
+                json.dump(config, f, indent=2)
+
 
         if self.use_hybrid:
-            self.hybrid = HybridRetriever(self.chunks, self.vector_store)
-        else:
-            self.hybrid = None
 
-        self.reranker = CrossEncoderReranker()
-        self.llm = OllamaLLM()
+            self.hybrid = HybridRetriever(
+                self.chunks,
+                self.vector_store
+            )
+
+        else:
+
+            self.hybrid = None
 
 
     def retrieve(self, query, top_k=3):
