@@ -5,17 +5,38 @@ from chunking.chunking import semantic_chunking
 from generation.generation import OllamaLLM
 from analyzer.document_analyzer import DocumentAnalyzer
 from retrieval.hybrid_retriever import HybridRetriever
+from loader.document_loader import DocumentLoader
 import os
 import json
 
 
 class RAGPipeline:
 
-    def __init__(self, document_text, chunk_size=200, storage_path="storage"):
+    def __init__(self, data_folder="data", chunk_size=200, storage_path="storage"):
 
+        self.data_folder = data_folder
         self.storage_path = storage_path
+        self.chunk_size = chunk_size
 
-        analyzer = DocumentAnalyzer(document_text)
+        print("\nInitializing RAG Pipeline...\n")
+
+        # ---------- Load Documents ----------
+
+        loader = DocumentLoader(data_folder)
+
+        documents = loader.load_documents()
+
+        if len(documents) == 0:
+            raise Exception("No documents found in data folder")
+
+        print(f"Loaded {len(documents)} documents")
+
+        # ---------- Adaptive Retrieval Detection ----------
+
+        combined_text = "\n".join([doc["text"] for doc in documents])
+
+        analyzer = DocumentAnalyzer(combined_text)
+
         self.use_hybrid = analyzer.is_code_heavy()
 
         print(
@@ -23,11 +44,15 @@ class RAGPipeline:
             f"{'HYBRID' if self.use_hybrid else 'VECTOR'}"
         )
 
+        # ---------- Initialize Models ----------
+
         self.embedder = EmbeddingModel("all-MiniLM-L6-v2")
 
         self.reranker = CrossEncoderReranker()
 
         self.llm = OllamaLLM()
+
+        # ---------- Vector Store ----------
 
         dimension = 384
 
@@ -37,9 +62,11 @@ class RAGPipeline:
             f"{storage_path}/faiss.index"
         )
 
+        # ---------- Load Existing Index ----------
+
         if index_exists:
 
-            print("Loading FAISS index from disk...")
+            print("\nLoading FAISS index from disk...\n")
 
             self.vector_store.load(storage_path)
 
@@ -47,12 +74,29 @@ class RAGPipeline:
 
         else:
 
-            print("Creating new FAISS index...")
+            print("\nBuilding index for multiple documents...\n")
 
-            self.chunks = semantic_chunking(
-                document_text,
-                max_chunk_size=chunk_size
-            )
+            all_chunks = []
+            all_metadata = []
+
+            for doc in documents:
+
+                chunks = semantic_chunking(
+                    doc["text"],
+                    max_chunk_size=chunk_size
+                )
+
+                metadata = [
+                    {"source": doc["source"]}
+                    for _ in chunks
+                ]
+
+                all_chunks.extend(chunks)
+                all_metadata.extend(metadata)
+
+            self.chunks = all_chunks
+
+            print(f"Total chunks created: {len(self.chunks)}")
 
             embeddings = self.embedder.embed_documents(
                 self.chunks
@@ -60,17 +104,26 @@ class RAGPipeline:
 
             self.vector_store.add_embeddings(
                 embeddings.astype("float32"),
-                self.chunks
+                self.chunks,
+                all_metadata
             )
 
             self.vector_store.save(storage_path)
+
+            # Save config
 
             config = {
                 "embedding_model": "all-MiniLM-L6-v2",
                 "chunk_size": chunk_size,
                 "retrieval_mode":
-                "hybrid" if self.use_hybrid else "vector"
+                "hybrid" if self.use_hybrid else "vector",
+                "documents": [
+                    doc["source"] for doc in documents
+                ]
+
             }
+
+            os.makedirs(storage_path, exist_ok=True)
 
             with open(
                 f"{storage_path}/config.json",
@@ -79,8 +132,11 @@ class RAGPipeline:
 
                 json.dump(config, f, indent=2)
 
+        # ---------- Hybrid Retriever ----------
 
         if self.use_hybrid:
+
+            print("Initializing Hybrid Retriever\n")
 
             self.hybrid = HybridRetriever(
                 self.chunks,
@@ -91,43 +147,74 @@ class RAGPipeline:
 
             self.hybrid = None
 
+        print("RAG Pipeline Ready\n")
 
-    def retrieve(self, query, top_k=3):
+    def retrieve(self, query, retrieval_k=8, final_k=3):
 
+        # -------- Stage 1: Retrieval --------
         if self.use_hybrid:
+
             retrieved = self.hybrid.search(
                 query,
                 self.embedder,
-                top_k=top_k,
+                top_k=retrieval_k,
                 alpha=0.6
             )
+
         else:
+
             query_embedding = self.embedder.embed_query(query)
-            retrieved = self.vector_store.search(query_embedding, top_k=top_k)
 
-        reranked = self.reranker.rerank(query, retrieved)
+            retrieved = self.vector_store.search(
+                query_embedding,
+                top_k=retrieval_k
+            )
 
-        return reranked
+        # -------- Stage 2: Reranking --------
+        reranked = self.reranker.rerank(
+            query,
+            retrieved
+        )
 
+        # -------- Stage 3: Return Top Final_k --------
+        return reranked[:final_k]
 
     def generate_answer(self, query, top_k=3, confidence_threshold=0.0):
 
-        retrieved = self.retrieve(query, top_k=top_k)
+        retrieved = self.retrieve(
+            query,
+            retrieval_k=8,
+            final_k=top_k
+        )
 
         top_score = retrieved[0]["score"]
 
+        # Confidence gating
+
         if top_score < confidence_threshold:
+
             return {
-                "answer": "I don't have enough confidence to answer this based on the provided document.",
+                "answer":
+                "I don't have enough information to answer this question.",
                 "confidence_score": top_score,
-                "context_used": []
+                "sources": []
             }
 
-        context = "\n\n".join([r["text"] for r in retrieved])
+        # Build Context
+
+        context = "\n\n".join(
+            [r["text"] for r in retrieved]
+        )
 
         prompt = f"""
-You are an AI assistant. Answer ONLY using the provided context.
-If the answer is not present in the context, say you don't know.
+You are an AI assistant.
+Answer ONLY using the provided context.
+Extract exact values when present.
+Field names in the document may use abbreviations.
+Examples:
+REF_CODE = reference code
+Voltage Ref = voltage reference
+If the answer is not present say you don't know.
 
 Context:
 {context}
@@ -140,8 +227,13 @@ Answer:
 
         answer = self.llm.generate(prompt)
 
+        sources = [
+            r.get("metadata", {})
+            for r in retrieved
+        ]
+
         return {
             "answer": answer.strip(),
             "confidence_score": top_score,
-            "context_used": retrieved
+            "sources": sources
         }

@@ -7,26 +7,34 @@ import os
 class FAISSVectorStore:
 
     def __init__(self, dimension):
+
         self.dimension = dimension
         self.index = faiss.IndexFlatIP(dimension)
-        self.texts = []
 
-    def add_embeddings(self, embeddings, texts):
+        self.texts = []
+        self.metadata = []
+
+
+    def add_embeddings(self, embeddings, texts, metadata):
 
         faiss.normalize_L2(embeddings)
 
         self.index.add(embeddings)
+
         self.texts.extend(texts)
+        self.metadata.extend(metadata)
 
 
     def search(self, query_embedding, top_k=3):
 
         query_embedding = np.array([query_embedding]).astype("float32")
 
-        # Normalize query
         faiss.normalize_L2(query_embedding)
 
-        scores, indices = self.index.search(query_embedding, top_k)
+        scores, indices = self.index.search(
+            query_embedding,
+            top_k
+        )
 
         results = []
 
@@ -36,13 +44,14 @@ class FAISSVectorStore:
 
                 results.append({
                     "text": self.texts[idx],
-                    "score": float(score)
+                    "score": float(score),
+                    "metadata": self.metadata[idx]
                 })
 
         return results
 
 
-    # -------- Persistence --------
+    # ---------- Persistence ----------
 
     def save(self, storage_path):
 
@@ -56,6 +65,9 @@ class FAISSVectorStore:
         with open(f"{storage_path}/chunks.pkl", "wb") as f:
             pickle.dump(self.texts, f)
 
+        with open(f"{storage_path}/metadata.pkl", "wb") as f:
+            pickle.dump(self.metadata, f)
+
 
     def load(self, storage_path):
 
@@ -65,3 +77,6 @@ class FAISSVectorStore:
 
         with open(f"{storage_path}/chunks.pkl", "rb") as f:
             self.texts = pickle.load(f)
+
+        with open(f"{storage_path}/metadata.pkl", "rb") as f:
+            self.metadata = pickle.load(f)
