@@ -4,7 +4,7 @@ import time
 
 from chunking.chunking import clean_text, overlapping_chunking, semantic_chunking
 from embedding.embedding import EmbeddingModel
-from vectorStore.vector_store import FAISSVectorStore
+from vector_store.vector_store import FAISSVectorStore
 from reranking.reranker import CrossEncoderReranker
 from retrieval.hybrid_retriever import HybridRetriever
 

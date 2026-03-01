@@ -1,11 +1,11 @@
-from embedding.embedding import EmbeddingModel
-from vectorStore.vector_store import FAISSVectorStore
-from reranking.reranker import CrossEncoderReranker
-from chunking.chunking import semantic_chunking
-from generation.generation import OllamaLLM
-from analyzer.document_analyzer import DocumentAnalyzer
-from retrieval.hybrid_retriever import HybridRetriever
-from loader.document_loader import DocumentLoader
+from core.embedding.embedding import EmbeddingModel
+from core.vector_store.vector_store import FAISSVectorStore
+from core.reranking.reranker import CrossEncoderReranker
+from core.chunking.chunking import semantic_chunking
+from core.generation.generation import OllamaLLM
+from core.analyzer.document_analyzer import DocumentAnalyzer
+from core.retrieval.hybrid_retriever import HybridRetriever
+from core.loader.document_loader import DocumentLoader
 import os
 import json
 
@@ -237,3 +237,88 @@ Answer:
             "confidence_score": top_score,
             "sources": sources
         }
+    
+    def rebuild_index(self):
+
+        print("\nRebuilding FAISS index...\n")
+
+        loader = DocumentLoader(self.data_folder)
+
+        documents = loader.load_documents()
+
+        if len(documents) == 0:
+            raise Exception("No documents found")
+
+        # ---------- Re-run Adaptive Retrieval Detection ----------
+
+        combined_text = "\n".join(
+            [doc["text"] for doc in documents]
+        )
+
+        analyzer = DocumentAnalyzer(combined_text)
+
+        self.use_hybrid = analyzer.is_code_heavy()
+
+        print(
+            f"Adaptive Retrieval Mode: "
+            f"{'HYBRID' if self.use_hybrid else 'VECTOR'}"
+        )
+
+        # ---------- Chunk Documents ----------
+
+        all_chunks = []
+        all_metadata = []
+
+        for doc in documents:
+
+            chunks = semantic_chunking(
+                doc["text"],
+                max_chunk_size=self.chunk_size
+            )
+
+            metadata = [
+                {"source": doc["source"]}
+                for _ in chunks
+            ]
+
+            all_chunks.extend(chunks)
+            all_metadata.extend(metadata)
+
+        self.chunks = all_chunks
+
+        print(f"Total chunks: {len(self.chunks)}")
+
+        # ---------- Rebuild FAISS ----------
+
+        embeddings = self.embedder.embed_documents(
+            self.chunks
+        )
+
+        dimension = embeddings.shape[1]
+
+        self.vector_store = FAISSVectorStore(dimension)
+
+        self.vector_store.add_embeddings(
+            embeddings.astype("float32"),
+            self.chunks,
+            all_metadata
+        )
+
+        self.vector_store.save(self.storage_path)
+
+        # ---------- Rebuild Hybrid Retriever ----------
+
+        if self.use_hybrid:
+
+            print("Initializing Hybrid Retriever")
+
+            self.hybrid = HybridRetriever(
+                self.chunks,
+                self.vector_store
+            )
+
+        else:
+
+            self.hybrid = None
+
+        print("\nIndex rebuilt successfully\n")

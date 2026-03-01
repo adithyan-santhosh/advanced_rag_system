@@ -1,4 +1,4 @@
-from pipeline.rag_pipeline import RAGPipeline
+from core.pipeline.rag_pipeline import RAGPipeline
 
 if __name__ == "__main__":
 
