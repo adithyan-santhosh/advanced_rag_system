@@ -3,9 +3,7 @@ The Solaris-X fleet utilizes the Lithium-Sulfur "Gen-3" battery pack. Standard o
 
 2. Maintenance Intervals
 Preventive maintenance is categorized into two tiers:
-
 Tier Alpha: Performed every 5,000 km. Includes sensor calibration and tire rotation.
-
 Tier Beta: Performed every 20,000 km. Includes coolant replacement and brake pad inspection.
 
 3. Emergency Override Procedures

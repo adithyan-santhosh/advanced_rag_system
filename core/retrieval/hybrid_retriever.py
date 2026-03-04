@@ -45,7 +45,8 @@ class HybridRetriever:
                 "text": chunk,
                 "vector_score": float(v_score),
                 "bm25_score": float(b_score),
-                "combined_score": float(combined_score)
+                "combined_score": float(combined_score),
+                "metadata": self.vector_store.metadata[i]
             })
 
         # Sort by combined score

@@ -7,21 +7,27 @@ class CrossEncoderReranker:
         self.model = CrossEncoder(model_name)
 
     def rerank(self, query, retrieved_chunks):
-        """
-        Rerank retrieved chunks using cross-encoder.
-        Returns sorted chunks by relevance.
-        """
-        pairs = [(query, chunk["text"]) for chunk in retrieved_chunks]
+
+        pairs = [
+            (query, chunk["text"])
+            for chunk in retrieved_chunks
+        ]
+
         scores = self.model.predict(pairs)
 
-        reranked = []
-        for i, chunk in enumerate(retrieved_chunks):
-            reranked.append({
+        reranked = sorted(
+            zip(retrieved_chunks, scores),
+            key=lambda x: x[1],
+            reverse=True
+        )
+
+        results = []
+
+        for chunk, score in reranked:
+            results.append({
                 "text": chunk["text"],
-                "score": float(scores[i])
+                "score": float(score),
+                "metadata": chunk.get("metadata", {})
             })
 
-        # Sort descending (higher score = more relevant)
-        reranked = sorted(reranked, key=lambda x: x["score"], reverse=True)
-
-        return reranked
+        return results

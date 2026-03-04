@@ -1,5 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, APIRouter
 from pydantic import BaseModel
+from core.logger.logger import logger
+import time
 import shutil
 import os
 
@@ -64,6 +66,7 @@ def ask_question(request: QueryRequest):
 @router.post("/upload", tags=["Document Management"])
 async def upload_file(file: UploadFile = File(...)):
 
+    start_time = time.time()
     filename = file.filename
 
     save_path = os.path.join(
@@ -72,7 +75,6 @@ async def upload_file(file: UploadFile = File(...)):
     )
 
     # Save uploaded file
-
     with open(save_path, "wb") as buffer:
 
         shutil.copyfileobj(
@@ -80,38 +82,46 @@ async def upload_file(file: UploadFile = File(...)):
             buffer
         )
 
-    # Extract text
-
-    try:
+    # ---------- Process File ----------
+    if filename.endswith(".pdf"):
         text = processor.extract_text(save_path)
-    except Exception as e:
-        return {
-            "error": str(e)
-        }
+        txt_filename = filename.replace(".pdf", ".txt")
 
-    # Save extracted text
+        txt_path = os.path.join(
+            DATA_FOLDER,
+            txt_filename
+        )
 
-    txt_filename = filename + ".txt"
+        with open(txt_path, "w", encoding="utf-8") as f:
+            f.write(text)
 
-    txt_path = os.path.join(
-        DATA_FOLDER,
-        txt_filename
-    )
-
-    with open(txt_path, "w", encoding="utf-8") as f:
-        f.write(text)
-
-    # Remove PDF after extraction
-
-    if save_path.endswith(".pdf"):
         os.remove(save_path)
+        final_filename = txt_filename
 
-    # Rebuild index
+    else:
+        # Already TXT
+        final_filename = filename
+
+    # ---------- Rebuild Index ----------
 
     rag.rebuild_index()
+
+    latency = round(time.time() - start_time, 3)
+
+    # ---------- Logging ----------
+
+    logger.info(
+        f"UPLOAD | "
+        f"OriginalFile={filename} | "
+        f"StoredAs={final_filename} | "
+        f"Mode={'HYBRID' if rag.use_hybrid else 'VECTOR'} | "
+        f"DocumentsIndexed={len(os.listdir(DATA_FOLDER))} | "
+        f"RebuildTime={latency}s"
+    )
+
     return {
         "message": "Document uploaded successfully",
-        "saved_as": txt_filename
+        "saved_as": final_filename
     }
 
 # HEALTH Endpoint

@@ -15,4 +15,4 @@ Override Lever located under the left fairing. If the Lean-Angle Sensor fails, t
 "Stable-Up" mode, which restricts leaning beyond 12°.
 Section 4: Regional Compliance The E-Supra is currently street-legal in District-Alpha and 
 Zone-Beta. It is strictly prohibited in the High-Altitude Reserve (Zone-Z) due to specialized 
-air-pressure requirements for the battery cooling  fans.
+air-pressure requirements for the battery cooling fans.

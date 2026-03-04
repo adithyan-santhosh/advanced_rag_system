@@ -6,6 +6,8 @@ from core.generation.generation import OllamaLLM
 from core.analyzer.document_analyzer import DocumentAnalyzer
 from core.retrieval.hybrid_retriever import HybridRetriever
 from core.loader.document_loader import DocumentLoader
+from core.logger.logger import logger
+import time
 import os
 import json
 
@@ -181,6 +183,8 @@ class RAGPipeline:
 
     def generate_answer(self, query, top_k=3, confidence_threshold=0.0):
 
+        start_time = time.time()
+
         retrieved = self.retrieve(
             query,
             retrieval_k=8,
@@ -188,7 +192,15 @@ class RAGPipeline:
         )
 
         top_score = retrieved[0]["score"]
+        latency = round(time.time() - start_time, 3)
 
+        logger.info(
+        f"QUERY | "
+        f"Mode={ 'HYBRID' if self.use_hybrid else 'VECTOR'} | "
+        f"Confidence={top_score:.3f} | "
+        f"Latency={latency}s | "
+        f"Query={query}"
+    )
         # Confidence gating
 
         if top_score < confidence_threshold:
@@ -227,10 +239,18 @@ Answer:
 
         answer = self.llm.generate(prompt)
 
-        sources = [
-            r.get("metadata", {})
-            for r in retrieved
-        ]
+        # Extract sources from metadata
+        source_set = set()
+
+        for r in retrieved:
+            meta = r.get("metadata", {})
+            if meta and "source" in meta:
+                source_set.add(meta["source"])
+
+        # Convert to clean list
+        sources = {
+            "documents": sorted(source_set)
+        }
 
         return {
             "answer": answer.strip(),
