@@ -169,6 +169,11 @@ Other Libraries
 * Scikit-learn
 
 ---
+# Architecture Diagram
+
+<img width="1536" height="1024" alt="Adaptive_hybrid_rag_system_architecture_diagram" src="https://github.com/user-attachments/assets/264f913d-c374-43fc-bf6b-830077b300f3" />
+
+---
 
 # API Endpoints
 
