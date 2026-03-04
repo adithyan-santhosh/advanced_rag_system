@@ -1,4 +1,9 @@
 # Adaptive Hybrid RAG System
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
+![FAISS](https://img.shields.io/badge/FAISS-blue?style=for-the-badge&logo=facebook&logoColor=white)
+![RAG](https://img.shields.io/badge/Architecture-RAG-orange?style=for-the-badge)
+![Ollama](https://img.shields.io/badge/Ollama-LLM-white?style=for-the-badge)
 
 A production-oriented **Retrieval-Augmented Generation (RAG)** system built using open-source models.
 The system supports **adaptive retrieval (Vector + Hybrid search), cross-encoder reranking, multi-document ingestion, FAISS persistence, and API deployment**.
