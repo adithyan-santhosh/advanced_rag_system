@@ -271,6 +271,39 @@ Answer:
             "sources": sources
         }
     
+    def generate_stream(self, query, top_k=3):
+
+        retrieved = self.retrieve(
+            query,
+            retrieval_k=5,
+            final_k=top_k
+        )
+
+        context = "\n\n".join(
+            [r["text"] for r in retrieved]
+        )
+
+        prompt = f"""
+    You are an AI assistant.
+    Answer ONLY using the provided context.
+    Extract exact values when present.
+    Field names in the document may use abbreviations.
+    Examples:
+    REF_CODE = reference code
+    Voltage Ref = voltage reference
+    If the answer is not present say you don't know.
+
+    Context:
+    {context}
+
+    Question:
+    {query}
+
+    Answer:
+    """
+
+        return self.llm.generate_stream(prompt)
+
     def rebuild_index(self):
 
         print("\nRebuilding FAISS index...\n")

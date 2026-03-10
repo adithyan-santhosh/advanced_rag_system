@@ -4,6 +4,7 @@ from core.logger.logger import logger
 import time
 import shutil
 import os
+from fastapi.responses import StreamingResponse
 
 from core.pipeline.rag_pipeline import RAGPipeline
 from core.processor.document_processor import DocumentProcessor
@@ -135,6 +136,20 @@ def health_check():
         "documents_folder": DATA_FOLDER,
         "storage_folder": STORAGE_FOLDER
     }
+
+@router.post("/ask-stream", tags=["RAG Query Engine"])
+async def ask_stream(request: QueryRequest):
+
+    question = request.question
+    
+    def stream():
+        for token in rag.generate_stream(question):
+            yield token
+
+    return StreamingResponse(
+        stream(),
+        media_type="text/plain"
+    )
 
 # Register Router
 app.include_router(router)
