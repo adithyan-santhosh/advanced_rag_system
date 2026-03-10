@@ -185,22 +185,19 @@ class RAGPipeline:
 
         start_time = time.time()
 
+        retrieval_start = time.time()
+
         retrieved = self.retrieve(
             query,
-            retrieval_k=8,
+            retrieval_k=5,
             final_k=top_k
         )
+
+        retrieval_time = round(time.time() - retrieval_start, 3)
 
         top_score = retrieved[0]["score"]
         latency = round(time.time() - start_time, 3)
 
-        logger.info(
-        f"QUERY | "
-        f"Mode={ 'HYBRID' if self.use_hybrid else 'VECTOR'} | "
-        f"Confidence={top_score:.3f} | "
-        f"Latency={latency}s | "
-        f"Query={query}"
-    )
         # Confidence gating
 
         if top_score < confidence_threshold:
@@ -237,7 +234,13 @@ Question:
 Answer:
 """
 
+        generation_start = time.time()
+
         answer = self.llm.generate(prompt)
+
+        generation_time = round(time.time() - generation_start, 3)
+
+        total_time = round(time.time() - start_time, 3)
 
         # Extract sources from metadata
         source_set = set()
@@ -251,6 +254,16 @@ Answer:
         sources = {
             "documents": sorted(source_set)
         }
+
+        logger.info(
+            f"QUERY | "
+            f"Mode={'HYBRID' if self.use_hybrid else 'VECTOR'} | "
+            f"Confidence={top_score:.3f} | "
+            f"Retrieval={retrieval_time}s | "
+            f"Generation={generation_time}s | "
+            f"Total={total_time}s | "
+            f"Query={query}"
+        )
 
         return {
             "answer": answer.strip(),
