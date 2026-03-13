@@ -128,7 +128,10 @@ Logged events include:
 * retrieval mode
 * latency
 * document uploads
-
+* retrieval time
+* generation time
+* overall time
+  
 Example log entry:
 
 ```
@@ -216,8 +219,46 @@ Example response:
 }
 ```
 
----
+### Ask Question (Streaming Response)
+Use this endpoint for real-time response generation. It is ideal for frontend "typewriter" effects where the answer appears word-by-word.
 
+```
+POST /rag-system/ask-stream
+```
+
+Example request:
+
+```json
+{
+  "question": "Why is Zone F restricted?"
+}
+```
+
+Example response:
+
+```
+The response is sent as a chunked stream (text/event-stream or text/plain). Each chunk represents a piece of the generated answer as the LLM processes it.
+Example Stream Sequence:
+
+Plaintext:
+Operation
+in
+Zone
+F
+is
+strictly
+prohibited
+due
+to
+ongoing
+construction
+and
+interference
+with
+GPS
+signals.
+
+```
 ### Upload Document
 
 ```
@@ -291,7 +332,6 @@ Planned enhancements include:
 
 * inline answer citations
 * query expansion
-* streaming responses
 * dockerized deployment
 * evaluation dashboard
 * retrieval performance metrics
