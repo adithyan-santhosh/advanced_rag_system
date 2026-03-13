@@ -1,0 +1,10 @@
+model,query,query_type,top_score,top1_correct,top3_correct,embedding_time_sec
+all-MiniLM-L6-v2,What happens if battery temperature exceeds 45°C?,relevant,6.3916,True,True,0.1049
+all-MiniLM-L6-v2,What is included in Tier Beta maintenance?,relevant,5.6357,True,True,0.1049
+all-MiniLM-L6-v2,What happens if remote operator latency exceeds 500ms?,relevant,4.4638,True,True,0.1049
+all-MiniLM-L6-v2,Where is Solaris-X prohibited from operating?,relevant,6.1602,False,True,0.1049
+all-MiniLM-L6-v2,What type of engine does Solaris-X use?,irrelevant,3.4606,False,False,0.1049
+all-MiniLM-L6-v2,What fuel does Solaris-X consume?,irrelevant,2.64,False,False,0.1049
+all-MiniLM-L6-v2,Who is the CEO of Solaris-X?,irrelevant,-1.6386,False,False,0.1049
+all-MiniLM-L6-v2,What is the vehicle's horsepower?,irrelevant,-9.0765,False,False,0.1049
+all-MiniLM-L6-v2,Does Solaris-X use diesel engine?,irrelevant,0.0218,False,False,0.1049

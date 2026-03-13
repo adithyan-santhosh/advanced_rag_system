@@ -1,0 +1,18 @@
+Kawasaki-Ninja Hybrid "E-Supra" Manual
+Section 1: Powertrain & Battery Specs The E-Supra utilizes the K-Volt Gen-4 Lithium-
+Graphene battery pack (UID: BATT-9942-XQ-2026). The optimal operational voltage is 
+385.4V. To prevent thermal runaway, the "Core-Safe" protocol triggers at 52°C, limiting the 
+motor output to 15% of maximum power. Charging from 20% to 85% requires exactly 14 
+minutes using a Level-4 Ultra-DC charger.
+Section 2: Maintenance Intervals (Project "Shift-Life")
+Tier 1 (Routine): Performed every 4,000 km. Includes ultrasonic chain cleaning and IMU 
+(Inertial Measurement Unit) recalibration.
+Tier 2 (Major): Performed every 16,000 km. Includes stator winding inspection and 
+coolant ﬂush (Type-G Blue only).
+Section 3: Emergency & Safety Codes In the event of an ABS-Sensor Mismatch, the 
+dashboard will display error code ERR_BRK_909. The rider must engage the Mechanical 
+Override Lever located under the left fairing. If the Lean-Angle Sensor fails, the bike enters 
+"Stable-Up" mode, which restricts leaning beyond 12°.
+Section 4: Regional Compliance The E-Supra is currently street-legal in District-Alpha and 
+Zone-Beta. It is strictly prohibited in the High-Altitude Reserve (Zone-Z) due to specialized 
+air-pressure requirements for the battery cooling fans.
