@@ -136,7 +136,7 @@ celerybeat.pid
 
 # Environments
 .env
-.rag_env/
+rag_env/
 .envrc
 .venv
 env/
